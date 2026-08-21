@@ -13,17 +13,12 @@
  */
 export const logo = {
   left: [
-    "                             ",
-    "█▀▀▀ █    █     ██  █▀▀█ ▀▀▀▀",
-    "█▀▀▀ █    █     ██  █__█  ██ ",
-    "▀▀▀▀ ▀▀▀▀ ▀▀▀▀  ▀▀  ▀▀▀▀  ▀▀ ",
+    "█▀▀▀ █    █    ▀▀▀ █▀▀█ ▀▀▀",
+    "█^^^ █    █     █  █__█  █ ",
+    "▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀ ▀▀▀▀  ▀ ",
   ],
-  right: [
-    "         ",
-    "█▀▀█  ██ ",
-    "█▀▀█  ██ ",
-    "▀  ▀  ▀▀ ",
-  ],
+  // Leading space gives the design's two-column separation; the renderer adds one.
+  right: [" █▀▀█ ▀▀▀", " █^^█  █ ", " ▀  ▀ ▀▀▀"],
 }
 
 // The "Go" sub-brand glyphs and shading marks stay upstream's - they are not

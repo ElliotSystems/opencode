@@ -3,17 +3,35 @@ import { Schema } from "effect"
 import { logo as glyphs } from "./logo"
 
 const wordmark = [
-  `                                       `,
-  `█▀▀▀ █    █     ██  █▀▀█ ▀▀▀▀ █▀▀█  ██ `,
-  `█▀▀▀ █    █     ██  █  █  ██  █▀▀█  ██ `,
-  `▀▀▀▀ ▀▀▀▀ ▀▀▀▀  ▀▀  ▀▀▀▀  ▀▀  ▀  ▀  ▀▀ `,
+  `█▀▀▀ █    █    ▀▀▀ █▀▀█ ▀▀▀  █▀▀█ ▀▀▀`,
+  `█▀▀▀ █    █     █  █  █  █   █▀▀█  █ `,
+  `▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀ ▀▀▀▀  ▀   ▀  ▀ ▀▀▀`,
 ]
 
 export class CancelledError extends Schema.TaggedErrorClass<CancelledError>()("UICancelledError", {}) {}
 
+/**
+ * Elliot AI brand colours.
+ *
+ * #FF6600 is the accent shared with the terminal app (terminal/src/App.css)
+ * and the legacy CLI (elliot-cli/src/theme.ts ACCENT), so the CLI now matches
+ * the rest of the product. Emitted as 24-bit colour for exact brand fidelity;
+ * terminals without truecolour degrade to their nearest palette entry.
+ *
+ * Only the ACCENT roles are rebranded. Danger/warning/success keep their
+ * conventional red/yellow/green: an error that stops looking red is a
+ * usability regression, not branding.
+ */
+const ORANGE = "\x1b[38;2;255;102;0m"
+const ORANGE_DIM = "\x1b[38;2;166;66;0m"
+const ORANGE_SHADOW_FG = "\x1b[38;2;92;37;0m"
+const ORANGE_SHADOW_BG = "\x1b[48;2;46;18;0m"
+const ORANGE_DEEP_FG = "\x1b[38;2;138;55;0m"
+const ORANGE_DEEP_BG = "\x1b[48;2;66;26;0m"
+
 export const Style = {
-  TEXT_HIGHLIGHT: "\x1b[96m",
-  TEXT_HIGHLIGHT_BOLD: "\x1b[96m\x1b[1m",
+  TEXT_HIGHLIGHT: ORANGE,
+  TEXT_HIGHLIGHT_BOLD: ORANGE + "\x1b[1m",
   TEXT_DIM: "\x1b[90m",
   TEXT_DIM_BOLD: "\x1b[90m\x1b[1m",
   TEXT_NORMAL: "\x1b[0m",
@@ -24,8 +42,8 @@ export const Style = {
   TEXT_DANGER_BOLD: "\x1b[91m\x1b[1m",
   TEXT_SUCCESS: "\x1b[92m",
   TEXT_SUCCESS_BOLD: "\x1b[92m\x1b[1m",
-  TEXT_INFO: "\x1b[94m",
-  TEXT_INFO_BOLD: "\x1b[94m\x1b[1m",
+  TEXT_INFO: ORANGE,
+  TEXT_INFO_BOLD: ORANGE + "\x1b[1m",
 }
 
 export function println(...message: string[]) {
@@ -59,14 +77,14 @@ export function logo(pad?: string) {
   const result: string[] = []
   const reset = "\x1b[0m"
   const left = {
-    fg: "\x1b[90m",
-    shadow: "\x1b[38;5;235m",
-    bg: "\x1b[48;5;235m",
+    fg: ORANGE_DIM,
+    shadow: ORANGE_SHADOW_FG,
+    bg: ORANGE_SHADOW_BG,
   }
   const right = {
-    fg: reset,
-    shadow: "\x1b[38;5;238m",
-    bg: "\x1b[48;5;238m",
+    fg: ORANGE,
+    shadow: ORANGE_DEEP_FG,
+    bg: ORANGE_DEEP_BG,
   }
   const gap = " "
   const draw = (line: string, fg: string, shadow: string, bg: string) => {
