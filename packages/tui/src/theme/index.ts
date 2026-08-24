@@ -8,6 +8,7 @@ import catppuccin from "./assets/catppuccin.json" with { type: "json" }
 import cobalt2 from "./assets/cobalt2.json" with { type: "json" }
 import cursor from "./assets/cursor.json" with { type: "json" }
 import dracula from "./assets/dracula.json" with { type: "json" }
+import elliot from "./assets/elliot.json" with { type: "json" }
 import everforest from "./assets/everforest.json" with { type: "json" }
 import flexoki from "./assets/flexoki.json" with { type: "json" }
 import github from "./assets/github.json" with { type: "json" }
@@ -128,6 +129,12 @@ export type ThemeJson = {
 }
 
 export const DEFAULT_THEMES: Record<string, ThemeJson> = {
+  // Elliot's own palette, built in rather than discovered. Theme discovery only
+  // scans `themes/*.json` under the global config dir and each `.opencode`
+  // directory (see context/theme.tsx), so shipping the palette as a file meant
+  // `"theme": "elliot"` silently fell back to the default on any machine that
+  // had not copied it into place. As a default theme it simply always resolves.
+  elliot,
   aura,
   ayu,
   catppuccin,
