@@ -1,7 +1,7 @@
 import type { TuiPlugin, TuiPluginApi } from "@opencode-ai/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
 import { createMemo, Show } from "solid-js"
-import { abbreviateHome } from "../../runtime"
+import { abbreviateHome, formatDirectory } from "../../runtime"
 import { useTuiPaths } from "../../context/runtime"
 
 const id = "internal:sidebar-footer"
@@ -21,7 +21,7 @@ function View(props: { api: TuiPluginApi; sessionID: string }) {
     const dir = session?.directory || props.api.state.path.directory || paths.cwd
     const out = abbreviateHome(dir, paths.home)
     const branch = session?.directory === props.api.state.path.directory ? props.api.state.vcs?.branch : undefined
-    const text = branch ? out + ":" + branch : out
+    const text = formatDirectory(out, branch)
     const list = text.split("/")
     return {
       parent: list.slice(0, -1).join("/"),
