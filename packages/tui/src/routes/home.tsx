@@ -12,10 +12,28 @@ import { useEditorContext } from "../context/editor"
 import { useTerminalDimensions } from "@opentui/solid"
 import { useTuiConfig } from "../config"
 import { HomeSessionDestinationProvider } from "./home/session-destination"
+import { useDirectory } from "../context/directory"
+import { useTheme } from "../context/theme"
 
 let once = false
+/*
+ * Knowledge-shaped, not TODO-shaped.
+ *
+ * This is the most-read copy in the product -- the first thing on screen in an
+ * empty prompt -- and "Fix a TODO in the codebase" says nothing about why this
+ * terminal is different from any other coding agent. The first suggestion a user
+ * sees should be the thing only Elliot can do: answer from the organisation's
+ * indexed knowledge, not just from the files in front of it.
+ *
+ * Shell suggestions stay as upstream's; shell mode is upstream's feature and its
+ * examples are already the right ones.
+ */
 const placeholder = {
-  normal: ["Fix a TODO in the codebase", "What is the tech stack of this project?", "Fix broken tests"],
+  normal: [
+    "Ask why this service is built the way it is",
+    "Which PRs changed the auth flow?",
+    "Summarise what this repo does for a new joiner",
+  ],
   shell: ["ls -la", "git status", "pwd"],
 }
 
@@ -30,6 +48,8 @@ export function Home() {
   const editor = useEditorContext()
   const dimensions = useTerminalDimensions()
   const tuiConfig = useTuiConfig()
+  const directory = useDirectory()
+  const { theme } = useTheme()
   const promptMaxWidth = createMemo(() => {
     const configured = tuiConfig.prompt?.max_width
     if (configured === "auto") return Math.max(75, Math.floor(dimensions().width * 0.7))
@@ -76,6 +96,20 @@ export function Home() {
           <pluginRuntime.Slot name="home_logo" mode="replace">
             <Logo />
           </pluginRuntime.Slot>
+        </box>
+        {/*
+         * Where am I, on what branch.
+         *
+         * The one fact a terminal welcome genuinely owes the reader, and the one
+         * the home screen did not show -- it was available only after starting a
+         * session, in the footer. `useDirectory()` is reused rather than
+         * reassembled so the home screen and the session footer can never
+         * disagree about the answer.
+         */}
+        <box flexShrink={0} paddingTop={1}>
+          <text fg={theme.textMuted} selectable={false}>
+            {directory()}
+          </text>
         </box>
         <box height={1} minHeight={0} flexShrink={1} />
         <box width="100%" maxWidth={promptMaxWidth()} zIndex={1000} paddingTop={1} flexShrink={0}>
