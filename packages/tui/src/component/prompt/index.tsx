@@ -16,7 +16,7 @@ import { fileURLToPath } from "url"
 import { useLocal } from "../../context/local"
 import { Flag } from "@opencode-ai/core/flag/flag"
 import { tint, useTheme } from "../../context/theme"
-import { EmptyBorder, SplitBorder } from "../../ui/border"
+import { EmptyBorder, RoundedBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
 import { Spinner } from "../spinner"
@@ -1348,26 +1348,48 @@ export function Prompt(props: PromptProps) {
   return (
     <>
       <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false} width="100%">
+        {/*
+         * A rounded box, not a left rail.
+         *
+         * The input is the first thing a user of a terminal agent looks for, and
+         * a lone `┃` rail against a filled slab does not read as "type here" --
+         * it reads as a quoted block. A closed, rounded outline does, which is
+         * why the CLIs that get this right all draw one.
+         *
+         * The `backgroundElement` fill goes with it: an outline and a fill state
+         * the same boundary twice, and it was the fill that made the prompt sit
+         * on the page like a pasted widget instead of in it. Outline-only also
+         * lets the border colour carry meaning -- it is the active agent's
+         * colour, Elliot orange by default -- rather than competing with a slab.
+         */}
         <box
           width="100%"
-          border={["left"]}
+          border={true}
           borderColor={borderHighlight()}
-          customBorderChars={{
-            ...SplitBorder.customBorderChars,
-            bottomLeft: "╹",
-          }}
+          customBorderChars={RoundedBorder}
         >
           <box
-            paddingLeft={2}
+            paddingLeft={1}
             paddingRight={2}
-            paddingTop={1}
             flexShrink={0}
-            backgroundColor={theme.backgroundElement}
             flexGrow={1}
             width="100%"
           >
-            <textarea
-              width="100%"
+            {/*
+             * Caret and textarea share a row; everything below (the agent, model
+             * and provider line) stays in the parent column, which is why the row
+             * wraps only these two rather than the whole box.
+             *
+             * The `>` is a standing invitation to type, and it is what tells you
+             * at a glance which box is the input once the transcript above also
+             * has boxes. Painted in the accent so the eye lands on it.
+             */}
+            <box flexDirection="row" width="100%">
+              <text fg={theme.accent} selectable={false}>
+                {"> "}
+              </text>
+              <textarea
+                flexGrow={1}
               placeholder={placeholderText()}
               placeholderColor={theme.textMuted}
               textColor={leader() ? theme.textMuted : theme.text}
@@ -1438,9 +1460,10 @@ export function Prompt(props: PromptProps) {
               onMouseDown={(r: MouseEvent) => r.target?.focus()}
               focusedBackgroundColor={theme.backgroundElement}
               cursorColor={props.disabled ? theme.backgroundElement : theme.text}
-              cursorStyle={tuiConfig.cursor}
-              syntaxStyle={syntax()}
-            />
+                cursorStyle={tuiConfig.cursor}
+                syntaxStyle={syntax()}
+              />
+            </box>
             <box flexDirection="row" flexShrink={0} paddingTop={1} gap={1} justifyContent="space-between">
               <box flexDirection="row" gap={1}>
                 <Show when={local.agent.current()} fallback={<box height={1} />}>
@@ -1484,33 +1507,13 @@ export function Prompt(props: PromptProps) {
             </box>
           </box>
         </box>
-        <box
-          height={1}
-          border={["left"]}
-          borderColor={borderHighlight()}
-          customBorderChars={{
-            ...EmptyBorder,
-            vertical: theme.backgroundElement.a !== 0 ? "╹" : " ",
-          }}
-        >
-          <box
-            height={1}
-            border={["bottom"]}
-            borderColor={theme.backgroundElement}
-            customBorderChars={
-              theme.backgroundElement.a !== 0
-                ? {
-                    ...EmptyBorder,
-                    horizontal: "▀",
-                  }
-                : {
-                    ...EmptyBorder,
-                    horizontal: " ",
-                  }
-            }
-          />
-        </box>
-        <box width="100%" flexDirection="row" justifyContent="space-between">
+        {/*
+         * The half-height `▀` strip and its `╹` rail cap that used to sit here
+         * are gone. They existed to close off the bottom of a slab that had no
+         * bottom edge of its own; a closed rounded box already has one, so
+         * keeping them drew a second, misaligned floor under the input.
+         */}
+        <box width="100%" flexDirection="row" justifyContent="space-between" paddingTop={1}>
           <Switch>
             <Match when={status().type !== "idle"}>
               <box

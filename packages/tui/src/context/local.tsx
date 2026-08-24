@@ -80,13 +80,27 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       const [agentStore, setAgentStore] = createStore({
         current: undefined as string | undefined,
       })
+      /*
+       * Agent colours, most-used first.
+       *
+       * The FIRST entry is the one most people ever see: it colours the default
+       * agent, and through `borderHighlight` it colours the prompt box itself. It
+       * used to be `secondary`, so Elliot's input frame came out in the secondary
+       * hue while the brand accent went unused — the accent leads now.
+       *
+       * The rest are ordered for maximum separation between neighbours, so the
+       * second and third agent someone adds are obviously distinct. `primary` and
+       * `info` sit last on purpose: in the Elliot palette both are orange-family
+       * and would be hard to tell from `accent`, so they are pushed to positions
+       * few workspaces reach.
+       */
       const colors = createMemo(() => [
-        theme.secondary,
         theme.accent,
+        theme.secondary,
         theme.success,
         theme.warning,
-        theme.primary,
         theme.error,
+        theme.primary,
         theme.info,
       ])
       return {
