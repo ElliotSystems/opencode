@@ -117,8 +117,31 @@ export function Home() {
             <Prompt ref={bind} right={<pluginRuntime.Slot name="home_prompt_right" />} placeholders={placeholder} />
           </pluginRuntime.Slot>
         </box>
+        {/*
+         * Breathing room between the input and whatever sits under it (hints,
+         * tips). Without it the first line below the bottom rule reads as part of
+         * the field. `minHeight={0}` so it is the first thing given up when the
+         * terminal is short -- spacing is worth less than content.
+         */}
+        <box height={1} minHeight={0} flexShrink={1} />
         <pluginRuntime.Slot name="home_bottom" />
-        <box flexGrow={1} minHeight={0} />
+        {/*
+         * The welcome block sits at the BOTTOM, not centred.
+         *
+         * Both spacers used to be `flexGrow={1}`, which split the slack evenly
+         * and floated the whole block mid-screen. That is the wrong resting place
+         * for a prompt: the input is where the session begins and where every
+         * later message will appear, so starting it low means the first thing you
+         * type does not jump halfway up the terminal when you press enter.
+         *
+         * All the slack now lives in the spacer ABOVE (line 93), so this one is a
+         * small fixed gap that keeps the block off the very last row instead of
+         * flush against the footer. Because the top spacer carries `minHeight={0}`
+         * it collapses first, so as content grows -- a multi-line prompt, tips,
+         * a long context line -- the block rises on its own rather than being
+         * clipped. Bottom by default, upward only when it has to.
+         */}
+        <box height={1} minHeight={0} flexShrink={1} />
         <Toast />
       </box>
       <box width="100%" flexShrink={0}>
