@@ -2,6 +2,7 @@ import { RGBA, TextAttributes } from "@opentui/core"
 import { For, type JSX } from "solid-js"
 import { tint, useTheme } from "../context/theme"
 import { logo } from "../logo"
+import { ELLIOT_ORANGE } from "../brand"
 
 export function Logo() {
   const { theme } = useTheme()
@@ -62,7 +63,7 @@ export function Logo() {
         {(line, index) => (
           <box flexDirection="row" gap={WORD_GAP}>
             <box flexDirection="row">{renderLine(line, theme.textMuted, false)}</box>
-            <box flexDirection="row">{renderLine(logo.right[index()], theme.text, true)}</box>
+            <box flexDirection="row">{renderLine(logo.right[index()], ELLIOT_ORANGE, true)}</box>
           </box>
         )}
       </For>

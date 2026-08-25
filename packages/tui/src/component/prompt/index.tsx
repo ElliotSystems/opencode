@@ -16,6 +16,7 @@ import { fileURLToPath } from "url"
 import { useLocal } from "../../context/local"
 import { Flag } from "@opencode-ai/core/flag/flag"
 import { tint, useTheme } from "../../context/theme"
+import { ELLIOT_ORANGE } from "../../brand"
 import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
@@ -1306,7 +1307,22 @@ export function Prompt(props: PromptProps) {
     () => !!local.agent.current() && store.mode === "normal" && showVariant(),
     animationsEnabled,
   )
-  const borderHighlight = createMemo(() => tint(theme.border, highlight(), agentMetaAlpha()))
+  /**
+   * The input rail is Elliot orange, on both the home and session prompts.
+   *
+   * It used to take the active agent's colour, whose first entry is
+   * `theme.secondary` — a blue (#5c9cf5) in the upstream palette. So the most
+   * prominent vertical line in the product was painted in another vendor's
+   * accent.
+   *
+   * The tint against `theme.border` and the `agentMetaAlpha` fade are kept, so
+   * the rail still fades in with the rest of the prompt chrome rather than
+   * snapping on. Only the colour it fades toward changes.
+   *
+   * Agent identity is not lost: the agent's own colour still paints its name
+   * directly under the input, which is where it actually reads as a label.
+   */
+  const borderHighlight = createMemo(() => tint(theme.border, ELLIOT_ORANGE, agentMetaAlpha()))
 
   const placeholderText = createMemo(() => {
     if (props.showPlaceholder === false) return undefined
