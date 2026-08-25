@@ -1,7 +1,7 @@
 import type { TuiPlugin, TuiPluginApi } from "@opencode-ai/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
 import { createMemo, Match, Show, Switch } from "solid-js"
-import { abbreviateHome, formatDirectory } from "../../runtime"
+import { abbreviateHome } from "../../runtime"
 import { useTuiPaths } from "../../context/runtime"
 import { useHomeSessionDestination } from "../../routes/home/session-destination"
 
@@ -17,7 +17,8 @@ function Directory(props: { api: TuiPluginApi }) {
     const out = abbreviateHome(selected.directory, paths.home)
     const branch =
       selected.directory === (props.api.state.path.directory || paths.cwd) ? props.api.state.vcs?.branch : undefined
-    return formatDirectory(out, branch)
+    if (branch) return out + ":" + branch
+    return out
   })
 
   return <Show when={dir()}>{(value) => <text fg={theme().textMuted}>{value()}</text>}</Show>

@@ -2004,28 +2004,17 @@ function BlockTool(props: {
   const [hover, setHover] = createSignal(false)
   const error = createMemo(() => (props.part?.state.status === "error" ? props.part.state.error : undefined))
   return (
-    /*
-     * Tool output is INDENTED, not boxed.
-     *
-     * This container used to sit on `backgroundPanel` behind a left rail, which
-     * made every shell run and diff read as a framed widget -- the single
-     * heaviest source of chrome in the transcript. A conversation reads better
-     * as one flowing column where depth is expressed by indentation alone, so
-     * the panel fill and the rail are both gone.
-     *
-     * The hover fill stays, because it is not decoration: it is the only signal
-     * that a block is clickable, and only appears when `onClick` is set. It
-     * drops to `backgroundElement` so a hover reads as a whisper against the
-     * page rather than as a second panel.
-     */
     <box
       ref={(el: BoxRenderable) => alwaysSeparate.add(el)}
+      border={["left"]}
       paddingTop={1}
       paddingBottom={1}
       paddingLeft={2}
       marginTop={1}
       gap={1}
-      backgroundColor={hover() ? theme.backgroundElement : undefined}
+      backgroundColor={hover() ? theme.backgroundMenu : theme.backgroundPanel}
+      customBorderChars={SplitBorder.customBorderChars}
+      borderColor={theme.background}
       onMouseOver={() => props.onClick && setHover(true)}
       onMouseOut={() => setHover(false)}
       onMouseUp={() => {

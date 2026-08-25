@@ -52,14 +52,7 @@ export function Logo() {
         {(line, index) => (
           <box flexDirection="row" gap={1}>
             <box flexDirection="row">{renderLine(line, theme.textMuted, false)}</box>
-            {/*
-             * The right half is Elliot's accent, not plain text. `brand(cli)`
-             * gave the CLI banner Elliot orange, but this component kept
-             * painting `theme.text` -- which is why the orange appeared NOWHERE
-             * in the TUI: the palette defined `primary` and nothing on screen
-             * ever used it.
-             */}
-            <box flexDirection="row">{renderLine(logo.right[index()], theme.primary, true)}</box>
+            <box flexDirection="row">{renderLine(logo.right[index()], theme.text, true)}</box>
           </box>
         )}
       </For>

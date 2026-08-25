@@ -15,8 +15,8 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { useLocal } from "../../context/local"
 import { Flag } from "@opencode-ai/core/flag/flag"
-import { useTheme } from "../../context/theme"
-import { EmptyBorder, RuleBorder, SplitBorder } from "../../ui/border"
+import { tint, useTheme } from "../../context/theme"
+import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
 import { Spinner } from "../spinner"
@@ -1306,6 +1306,7 @@ export function Prompt(props: PromptProps) {
     () => !!local.agent.current() && store.mode === "normal" && showVariant(),
     animationsEnabled,
   )
+  const borderHighlight = createMemo(() => tint(theme.border, highlight(), agentMetaAlpha()))
 
   const placeholderText = createMemo(() => {
     if (props.showPlaceholder === false) return undefined
@@ -1347,182 +1348,169 @@ export function Prompt(props: PromptProps) {
   return (
     <>
       <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false} width="100%">
-        {/*
-         * Two rules, not a box and not a rail.
-         *
-         * A lone `┃` rail against a filled slab does not read as "type here" --
-         * it reads as a quoted block. A closed box reads as a field, but it costs
-         * two columns on every wrapped line and visually pens the text in. A rule
-         * above and a rule below reads as the field while leaving both ends open,
-         * so a long prompt runs the full width of the terminal. That is the shape
-         * Claude Code's prompt uses, and the reason it works.
-         *
-         * The `backgroundElement` fill goes with the rail: a boundary and a fill
-         * state the same thing twice, and it was the fill that made the prompt sit
-         * on the page like a pasted widget instead of in it. Unfilled also lets the
-         * rule colour carry meaning -- it is the active agent's colour, Elliot
-         * orange by default -- rather than competing with a slab.
-         */}
-        {/*
-         * The rules are GREY, not the accent.
-         *
-         * They were painted with the agent colour, which put the loudest element
-         * on screen -- two full-width orange lines -- around the quietest content.
-         * A rule is structure, not information: it should say "the field is here"
-         * and then disappear. `theme.border` does that, and it leaves the accent
-         * free to mean something where it is actually used.
-         */}
-        <box width="100%" border={["top", "bottom"]} borderColor={theme.border} customBorderChars={RuleBorder}>
-          <box flexShrink={0} flexGrow={1} width="100%">
-            {/*
-             * Caret and textarea share a row; everything below (the agent, model
-             * and provider line) stays in the parent column, which is why the row
-             * wraps only these two rather than the whole box.
-             *
-             * `❯` rather than `>`: it is a glyph, not punctuation, so it reads as
-             * a prompt marker instead of a stray comparison operator. With the
-             * rules now grey this is the one accented mark in the field, which is
-             * exactly the weight it should carry.
-             *
-             * The textarea also carries NO focus fill. It kept its own
-             * `backgroundElement` background after the container's was removed,
-             * which drew a grey slab hugging the text -- a second boundary inside
-             * two rules that already mark the field, and the thing that made the
-             * input look like an unstyled form control.
-             */}
-            <box flexDirection="row" width="100%">
-              <text fg={theme.accent} selectable={false}>
-                {"❯ "}
-              </text>
-              <textarea
-                flexGrow={1}
-                placeholder={placeholderText()}
-                placeholderColor={theme.textMuted}
-                textColor={leader() ? theme.textMuted : theme.text}
-                focusedTextColor={leader() ? theme.textMuted : theme.text}
-                minHeight={1}
-                maxHeight={maxHeight()}
-                onContentChange={() => {
-                  const value = input.plainText
-                  setStore("prompt", "input", value)
-                  auto()?.onInput(value)
-                  syncExtmarksWithPromptParts()
-                  setCursorVersion((value) => value + 1)
-                }}
-                onCursorChange={() => setCursorVersion((value) => value + 1)}
-                onKeyDown={(e: { preventDefault(): void }) => {
-                  if (props.disabled) {
-                    e.preventDefault()
-                    return
-                  }
-                }}
-                onSubmit={() => {
-                  // IME: double-defer so the last composed character (e.g. Korean
-                  // hangul) is flushed to plainText before we read it for submission.
-                  setTimeout(() => setTimeout(() => submit(), 0), 0)
-                }}
-                onPaste={async (event: PasteEvent) => {
-                  if (props.disabled) {
-                    event.preventDefault()
-                    return
-                  }
-
-                  // Normalize line endings at the boundary
-                  // Windows ConPTY/Terminal often sends CR-only newlines in bracketed paste
-                  // Replace CRLF first, then any remaining CR
-                  const normalizedText = decodePasteBytes(event.bytes).replace(/\r\n/g, "\n").replace(/\r/g, "\n")
-                  const pastedContent = normalizedText.trim()
-
-                  // Windows Terminal <1.25 can surface image-only clipboard as an
-                  // empty bracketed paste. Windows Terminal 1.25+ does not.
-                  if (!pastedContent) {
-                    keymap.dispatchCommand("prompt.paste")
-                    return
-                  }
-
-                  // Once we cross an async boundary below, the terminal may perform its
-                  // default paste unless we suppress it first and handle insertion ourselves.
+        <box
+          width="100%"
+          border={["left"]}
+          borderColor={borderHighlight()}
+          customBorderChars={{
+            ...SplitBorder.customBorderChars,
+            bottomLeft: "╹",
+          }}
+        >
+          <box
+            paddingLeft={2}
+            paddingRight={2}
+            paddingTop={1}
+            flexShrink={0}
+            backgroundColor={theme.backgroundElement}
+            flexGrow={1}
+            width="100%"
+          >
+            <textarea
+              width="100%"
+              placeholder={placeholderText()}
+              placeholderColor={theme.textMuted}
+              textColor={leader() ? theme.textMuted : theme.text}
+              focusedTextColor={leader() ? theme.textMuted : theme.text}
+              minHeight={1}
+              maxHeight={maxHeight()}
+              onContentChange={() => {
+                const value = input.plainText
+                setStore("prompt", "input", value)
+                auto()?.onInput(value)
+                syncExtmarksWithPromptParts()
+                setCursorVersion((value) => value + 1)
+              }}
+              onCursorChange={() => setCursorVersion((value) => value + 1)}
+              onKeyDown={(e: { preventDefault(): void }) => {
+                if (props.disabled) {
+                  e.preventDefault()
+                  return
+                }
+              }}
+              onSubmit={() => {
+                // IME: double-defer so the last composed character (e.g. Korean
+                // hangul) is flushed to plainText before we read it for submission.
+                setTimeout(() => setTimeout(() => submit(), 0), 0)
+              }}
+              onPaste={async (event: PasteEvent) => {
+                if (props.disabled) {
                   event.preventDefault()
+                  return
+                }
 
-                  await pasteInputText(normalizedText)
-                }}
-                ref={(r: TextareaRenderable) => {
-                  input = r
-                  Object.assign(r, {
-                    getClipboardText: (text: string) => expandPastedTextPlaceholders(text, store.prompt.parts),
-                  })
-                  setInputTarget(r)
-                  if (promptPartTypeId === 0) {
-                    promptPartTypeId = input.extmarks.registerType("prompt-part")
-                  }
-                  props.ref?.(ref)
-                  setTimeout(() => {
-                    // setTimeout is a workaround and needs to be addressed properly
-                    if (!input || input.isDestroyed) return
-                    input.cursorColor = theme.text
-                    if (tuiConfig.cursor) input.cursorStyle = tuiConfig.cursor
-                  }, 0)
-                }}
-                onMouseDown={(r: MouseEvent) => r.target?.focus()}
-                cursorColor={props.disabled ? theme.backgroundElement : theme.text}
-                cursorStyle={tuiConfig.cursor}
-                syntaxStyle={syntax()}
-              />
-            </box>
-          </box>
-        </box>
-        {/*
-         * The agent / model / provider line sits BELOW the bottom rule, not
-         * between the rules. The two rules exist to bracket the field the user
-         * types into; putting status inside them makes the field look like it
-         * contains two things, and pushes the bottom rule away from the text it
-         * is supposed to underline.
-         */}
-        <box flexDirection="row" flexShrink={0} paddingTop={1} gap={1} justifyContent="space-between">
-          <box flexDirection="row" gap={1}>
-            <Show when={local.agent.current()} fallback={<box height={1} />}>
-              {(agent) => (
-                <>
-                  <text fg={fadeColor(highlight(), agentMetaAlpha())}>
-                    {store.mode === "shell" ? "Shell" : Locale.titlecase(agent().name)}
-                  </text>
-                  <Show when={store.mode === "normal" && local.permission.mode === "auto"}>
-                    <text fg={fadeColor(theme.textMuted, agentMetaAlpha())}>auto</text>
-                  </Show>
-                  <Show when={store.mode === "normal"}>
-                    <box flexDirection="row" gap={1}>
-                      <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>·</text>
-                      <text flexShrink={0} fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}>
-                        {local.model.parsed().model}
+                // Normalize line endings at the boundary
+                // Windows ConPTY/Terminal often sends CR-only newlines in bracketed paste
+                // Replace CRLF first, then any remaining CR
+                const normalizedText = decodePasteBytes(event.bytes).replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+                const pastedContent = normalizedText.trim()
+
+                // Windows Terminal <1.25 can surface image-only clipboard as an
+                // empty bracketed paste. Windows Terminal 1.25+ does not.
+                if (!pastedContent) {
+                  keymap.dispatchCommand("prompt.paste")
+                  return
+                }
+
+                // Once we cross an async boundary below, the terminal may perform its
+                // default paste unless we suppress it first and handle insertion ourselves.
+                event.preventDefault()
+
+                await pasteInputText(normalizedText)
+              }}
+              ref={(r: TextareaRenderable) => {
+                input = r
+                Object.assign(r, {
+                  getClipboardText: (text: string) => expandPastedTextPlaceholders(text, store.prompt.parts),
+                })
+                setInputTarget(r)
+                if (promptPartTypeId === 0) {
+                  promptPartTypeId = input.extmarks.registerType("prompt-part")
+                }
+                props.ref?.(ref)
+                setTimeout(() => {
+                  // setTimeout is a workaround and needs to be addressed properly
+                  if (!input || input.isDestroyed) return
+                  input.cursorColor = theme.text
+                  if (tuiConfig.cursor) input.cursorStyle = tuiConfig.cursor
+                }, 0)
+              }}
+              onMouseDown={(r: MouseEvent) => r.target?.focus()}
+              focusedBackgroundColor={theme.backgroundElement}
+              cursorColor={props.disabled ? theme.backgroundElement : theme.text}
+              cursorStyle={tuiConfig.cursor}
+              syntaxStyle={syntax()}
+            />
+            <box flexDirection="row" flexShrink={0} paddingTop={1} gap={1} justifyContent="space-between">
+              <box flexDirection="row" gap={1}>
+                <Show when={local.agent.current()} fallback={<box height={1} />}>
+                  {(agent) => (
+                    <>
+                      <text fg={fadeColor(highlight(), agentMetaAlpha())}>
+                        {store.mode === "shell" ? "Shell" : Locale.titlecase(agent().name)}
                       </text>
-                      <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
-                      <Show when={showVariant()}>
-                        <text fg={fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
-                        <text>
-                          <span style={{ fg: fadeColor(theme.warning, variantMetaAlpha()), bold: true }}>
-                            {local.model.variant.current()}
-                          </span>
-                        </text>
+                      <Show when={store.mode === "normal" && local.permission.mode === "auto"}>
+                        <text fg={fadeColor(theme.textMuted, agentMetaAlpha())}>auto</text>
                       </Show>
-                    </box>
-                  </Show>
-                </>
-              )}
-            </Show>
-          </box>
-          <Show when={hasRightContent()}>
-            <box flexDirection="row" gap={1} alignItems="center">
-              {props.right}
+                      <Show when={store.mode === "normal"}>
+                        <box flexDirection="row" gap={1}>
+                          <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>·</text>
+                          <text
+                            flexShrink={0}
+                            fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
+                          >
+                            {local.model.parsed().model}
+                          </text>
+                          <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
+                          <Show when={showVariant()}>
+                            <text fg={fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
+                            <text>
+                              <span style={{ fg: fadeColor(theme.warning, variantMetaAlpha()), bold: true }}>
+                                {local.model.variant.current()}
+                              </span>
+                            </text>
+                          </Show>
+                        </box>
+                      </Show>
+                    </>
+                  )}
+                </Show>
+              </box>
+              <Show when={hasRightContent()}>
+                <box flexDirection="row" gap={1} alignItems="center">
+                  {props.right}
+                </box>
+              </Show>
             </box>
-          </Show>
+          </box>
         </box>
-        {/*
-         * The half-height `▀` strip and its `╹` rail cap that used to sit here
-         * are gone. They existed to close off the bottom of a slab that had no
-         * bottom edge of its own; a closed rounded box already has one, so
-         * keeping them drew a second, misaligned floor under the input.
-         */}
-        <box width="100%" flexDirection="row" justifyContent="space-between" paddingTop={1}>
+        <box
+          height={1}
+          border={["left"]}
+          borderColor={borderHighlight()}
+          customBorderChars={{
+            ...EmptyBorder,
+            vertical: theme.backgroundElement.a !== 0 ? "╹" : " ",
+          }}
+        >
+          <box
+            height={1}
+            border={["bottom"]}
+            borderColor={theme.backgroundElement}
+            customBorderChars={
+              theme.backgroundElement.a !== 0
+                ? {
+                    ...EmptyBorder,
+                    horizontal: "▀",
+                  }
+                : {
+                    ...EmptyBorder,
+                    horizontal: " ",
+                  }
+            }
+          />
+        </box>
+        <box width="100%" flexDirection="row" justifyContent="space-between">
           <Switch>
             <Match when={status().type !== "idle"}>
               <box

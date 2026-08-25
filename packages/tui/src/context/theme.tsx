@@ -89,21 +89,11 @@ type State = {
   ready: boolean
 }
 
-/**
- * The palette this distribution falls back to.
- *
- * Elliot's, not upstream's: an Elliot build that boots into OpenCode blue has
- * shipped the wrong product. Every fallback below routes here, so a missing
- * config value, a failed theme discovery and an unreadable terminal palette all
- * land on the same known-good answer instead of three different ones.
- */
-const FALLBACK_THEME = "elliot"
-
 const [store, setStore] = createStore<State>({
   themes: allThemes(),
   mode: "dark",
   lock: undefined,
-  active: FALLBACK_THEME,
+  active: "opencode",
   ready: false,
 })
 
@@ -128,8 +118,8 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
         if (!lock && pick(kv.get("theme_mode")) !== undefined) kv.set("theme_mode", undefined)
         draft.mode = mode
         draft.lock = lock
-        const active = config.theme ?? kv.get("theme", FALLBACK_THEME)
-        draft.active = typeof active === "string" ? active : FALLBACK_THEME
+        const active = config.theme ?? kv.get("theme", "opencode")
+        draft.active = typeof active === "string" ? active : "opencode"
         draft.ready = false
       }),
     )
@@ -150,7 +140,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
             }, {}),
           )
         })
-        .catch(() => setStore("active", FALLBACK_THEME))
+        .catch(() => setStore("active", "opencode"))
     }
 
     onMount(() => {
@@ -169,7 +159,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
           if (!colors.palette[0]) {
             if (hasResolvedSystemTheme) return
             setSystemTheme(undefined)
-            if (store.active === "system") setStore("active", FALLBACK_THEME)
+            if (store.active === "system") setStore("active", "opencode")
             return
           }
           const next = store.lock ?? terminalMode(colors) ?? mode
@@ -184,7 +174,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
         .catch(() => {
           if (hasResolvedSystemTheme) return
           setSystemTheme(undefined)
-          if (store.active === "system") setStore("active", FALLBACK_THEME)
+          if (store.active === "system") setStore("active", "opencode")
         })
     }
 
