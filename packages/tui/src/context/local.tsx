@@ -8,6 +8,7 @@ import { useTuiPaths } from "./runtime"
 import { useArgs } from "./args"
 import { useSDK } from "./sdk"
 import { RGBA } from "@opentui/core"
+import { ELLIOT_ORANGE } from "../brand"
 import { readJson, writeJsonAtomic } from "../util/persistence"
 import { useTheme } from "./theme"
 import { useToast } from "../ui/toast"
@@ -80,8 +81,22 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       const [agentStore, setAgentStore] = createStore({
         current: undefined as string | undefined,
       })
+      /*
+       * The first entry is Elliot orange, not `theme.secondary`.
+       *
+       * This list is the agent palette, and its first entry is the one nearly
+       * everyone sees: it colours the default agent, and through that the rail
+       * beside a sent question, the prompt rail, and the agent's name under the
+       * input. It was `theme.secondary`, which upstream's palette defines as
+       * #5c9cf5 -- so the three most prominent accents in the product were all
+       * painted another vendor's blue.
+       *
+       * Setting it here rather than at each of those call sites keeps them
+       * agreeing with each other: they all read the agent's colour, so they stay
+       * one colour, and switching agents still moves all three together.
+       */
       const colors = createMemo(() => [
-        theme.secondary,
+        ELLIOT_ORANGE,
         theme.accent,
         theme.success,
         theme.warning,
