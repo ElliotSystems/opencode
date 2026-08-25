@@ -1306,6 +1306,13 @@ export function Prompt(props: PromptProps) {
     () => !!local.agent.current() && store.mode === "normal" && showVariant(),
     animationsEnabled,
   )
+  /*
+   * The rail follows the ACTIVE AGENT's colour, and the default agent is now
+   * Elliot orange (see `context/local.tsx`). Fixing it there rather than
+   * hardcoding orange here keeps this rail, the rail beside a sent question
+   * and the agent's name label reading the same value, so they cannot drift
+   * apart and they still move together when the agent changes.
+   */
   const borderHighlight = createMemo(() => tint(theme.border, highlight(), agentMetaAlpha()))
 
   const placeholderText = createMemo(() => {
