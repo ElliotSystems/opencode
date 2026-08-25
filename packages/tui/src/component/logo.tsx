@@ -46,11 +46,21 @@ export function Logo() {
     })
   }
 
+  /**
+   * Three columns between ELLIOT and AI, not one.
+   *
+   * Letters inside a word are already one column apart, so a one-column gap here
+   * made the word space identical to the letter space and the mark read as a
+   * single run — "ELLIOTAI". A word space has to be visibly wider than a letter
+   * space for two words to read as two words.
+   */
+  const WORD_GAP = 3
+
   return (
     <box>
       <For each={logo.left}>
         {(line, index) => (
-          <box flexDirection="row" gap={1}>
+          <box flexDirection="row" gap={WORD_GAP}>
             <box flexDirection="row">{renderLine(line, theme.textMuted, false)}</box>
             <box flexDirection="row">{renderLine(logo.right[index()], theme.text, true)}</box>
           </box>
