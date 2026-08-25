@@ -1,6 +1,6 @@
+import { TextAttributes } from "@opentui/core"
 import { Prompt, type PromptRef } from "../component/prompt"
 import { createEffect, createMemo, createSignal, onMount } from "solid-js"
-import { Logo } from "../component/logo"
 import { useSync } from "../context/sync"
 import { Toast } from "../ui/toast"
 import { useArgs } from "../context/args"
@@ -50,10 +50,20 @@ export function Home() {
   const tuiConfig = useTuiConfig()
   const directory = useDirectory()
   const { theme } = useTheme()
+  /*
+   * Full width by default; `tui.prompt.max_width` still wins when it is set.
+   *
+   * The default was 75 columns, which -- with the header no longer centred --
+   * left the input stopping short of the right edge for no visible reason, and
+   * made it a different width from the session prompt, so it visibly resized the
+   * moment you sent the first message. Full width matches the session route, so
+   * the field the user is looking at does not move when the conversation starts.
+   */
   const promptMaxWidth = createMemo(() => {
     const configured = tuiConfig.prompt?.max_width
+    if (configured === undefined) return undefined
     if (configured === "auto") return Math.max(75, Math.floor(dimensions().width * 0.7))
-    return configured ?? 75
+    return configured
   })
   let sent = false
 
@@ -89,30 +99,56 @@ export function Home() {
 
   return (
     <HomeSessionDestinationProvider>
-      <box flexGrow={1} alignItems="center" paddingLeft={2} paddingRight={2}>
-        <box flexGrow={1} minHeight={0} />
-        <box height={4} minHeight={0} flexShrink={1} />
-        <box flexShrink={0}>
+      {/*
+       * Header at the top, input at the bottom, void between.
+       *
+       * This screen used to centre a large block wordmark mid-terminal, which
+       * read as a splash screen rather than a tool: the identity took the space
+       * the conversation was about to need, and the one useful fact on screen
+       * (where am I) was a lone `~` under it.
+       *
+       * The layout now states identity compactly in the top-left corner and gets
+       * out of the way. The empty middle is deliberate -- it is exactly where the
+       * transcript appears, so the first message fills the void instead of
+       * shoving a centred logo aside. Left-aligned throughout: centred text in a
+       * terminal reads as decoration, and every line below is left-aligned
+       * anyway, so centring only the header made it look detached.
+       */}
+      <box flexGrow={1} paddingLeft={2} paddingRight={2}>
+        <box flexShrink={0} paddingTop={1}>
           <pluginRuntime.Slot name="home_logo" mode="replace">
-            <Logo />
+            <box flexDirection="row" gap={1}>
+              {/*
+               * The play triangle from the Elliot mark, and the only place the
+               * brand orange appears up here. `dashboard/src/App.css` calls the
+               * mark's triangle a fixed asset rather than a themeable role, so it
+               * reads `primary` (#FF6600) directly.
+               */}
+              <text fg={theme.primary} selectable={false}>
+                ▶
+              </text>
+              <text fg={theme.text} attributes={TextAttributes.BOLD} selectable={false}>
+                Elliot AI
+              </text>
+            </box>
           </pluginRuntime.Slot>
         </box>
         {/*
-         * Where am I, on what branch.
+         * Where am I, on what branch -- the one fact a terminal welcome genuinely
+         * owes the reader. Indented two columns so it hangs under the wordmark
+         * rather than starting a second column.
          *
-         * The one fact a terminal welcome genuinely owes the reader, and the one
-         * the home screen did not show -- it was available only after starting a
-         * session, in the footer. `useDirectory()` is reused rather than
-         * reassembled so the home screen and the session footer can never
-         * disagree about the answer.
+         * Model and agent are deliberately NOT repeated here: they already sit
+         * directly under the input, and a header that restates them just makes
+         * two places to read the same thing.
          */}
-        <box flexShrink={0} paddingTop={1}>
+        <box flexShrink={0} paddingLeft={2}>
           <text fg={theme.textMuted} selectable={false}>
             {directory()}
           </text>
         </box>
-        <box height={1} minHeight={0} flexShrink={1} />
-        <box width="100%" maxWidth={promptMaxWidth()} zIndex={1000} paddingTop={1} flexShrink={0}>
+        <box flexGrow={1} minHeight={0} />
+        <box width="100%" maxWidth={promptMaxWidth()} zIndex={1000} flexShrink={0}>
           <pluginRuntime.Slot name="home_prompt" mode="replace" ref={bind}>
             <Prompt ref={bind} right={<pluginRuntime.Slot name="home_prompt_right" />} placeholders={placeholder} />
           </pluginRuntime.Slot>
@@ -125,23 +161,6 @@ export function Home() {
          */}
         <box height={1} minHeight={0} flexShrink={1} />
         <pluginRuntime.Slot name="home_bottom" />
-        {/*
-         * The welcome block sits at the BOTTOM, not centred.
-         *
-         * Both spacers used to be `flexGrow={1}`, which split the slack evenly
-         * and floated the whole block mid-screen. That is the wrong resting place
-         * for a prompt: the input is where the session begins and where every
-         * later message will appear, so starting it low means the first thing you
-         * type does not jump halfway up the terminal when you press enter.
-         *
-         * All the slack now lives in the spacer ABOVE (line 93), so this one is a
-         * small fixed gap that keeps the block off the very last row instead of
-         * flush against the footer. Because the top spacer carries `minHeight={0}`
-         * it collapses first, so as content grows -- a multi-line prompt, tips,
-         * a long context line -- the block rises on its own rather than being
-         * clipped. Bottom by default, upward only when it has to.
-         */}
-        <box height={1} minHeight={0} flexShrink={1} />
         <Toast />
       </box>
       <box width="100%" flexShrink={0}>

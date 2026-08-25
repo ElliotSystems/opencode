@@ -15,7 +15,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { useLocal } from "../../context/local"
 import { Flag } from "@opencode-ai/core/flag/flag"
-import { tint, useTheme } from "../../context/theme"
+import { useTheme } from "../../context/theme"
 import { EmptyBorder, RuleBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
@@ -1306,7 +1306,6 @@ export function Prompt(props: PromptProps) {
     () => !!local.agent.current() && store.mode === "normal" && showVariant(),
     animationsEnabled,
   )
-  const borderHighlight = createMemo(() => tint(theme.border, highlight(), agentMetaAlpha()))
 
   const placeholderText = createMemo(() => {
     if (props.showPlaceholder === false) return undefined
@@ -1364,20 +1363,36 @@ export function Prompt(props: PromptProps) {
          * rule colour carry meaning -- it is the active agent's colour, Elliot
          * orange by default -- rather than competing with a slab.
          */}
-        <box width="100%" border={["top", "bottom"]} borderColor={borderHighlight()} customBorderChars={RuleBorder}>
+        {/*
+         * The rules are GREY, not the accent.
+         *
+         * They were painted with the agent colour, which put the loudest element
+         * on screen -- two full-width orange lines -- around the quietest content.
+         * A rule is structure, not information: it should say "the field is here"
+         * and then disappear. `theme.border` does that, and it leaves the accent
+         * free to mean something where it is actually used.
+         */}
+        <box width="100%" border={["top", "bottom"]} borderColor={theme.border} customBorderChars={RuleBorder}>
           <box flexShrink={0} flexGrow={1} width="100%">
             {/*
              * Caret and textarea share a row; everything below (the agent, model
              * and provider line) stays in the parent column, which is why the row
              * wraps only these two rather than the whole box.
              *
-             * The `>` is a standing invitation to type, and with no left edge on
-             * the field it is also what marks where the input begins. Painted in
-             * the accent so the eye lands on it.
+             * `❯` rather than `>`: it is a glyph, not punctuation, so it reads as
+             * a prompt marker instead of a stray comparison operator. With the
+             * rules now grey this is the one accented mark in the field, which is
+             * exactly the weight it should carry.
+             *
+             * The textarea also carries NO focus fill. It kept its own
+             * `backgroundElement` background after the container's was removed,
+             * which drew a grey slab hugging the text -- a second boundary inside
+             * two rules that already mark the field, and the thing that made the
+             * input look like an unstyled form control.
              */}
             <box flexDirection="row" width="100%">
               <text fg={theme.accent} selectable={false}>
-                {"> "}
+                {"❯ "}
               </text>
               <textarea
                 flexGrow={1}
@@ -1449,7 +1464,6 @@ export function Prompt(props: PromptProps) {
                   }, 0)
                 }}
                 onMouseDown={(r: MouseEvent) => r.target?.focus()}
-                focusedBackgroundColor={theme.backgroundElement}
                 cursorColor={props.disabled ? theme.backgroundElement : theme.text}
                 cursorStyle={tuiConfig.cursor}
                 syntaxStyle={syntax()}
